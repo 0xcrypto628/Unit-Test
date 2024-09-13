@@ -19,4 +19,4 @@ faucet:
   - 100000stake
 validators:
 - name: alice
-  bonded: 100000000stake
+  bonded: 100000000stake  

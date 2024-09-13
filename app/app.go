@@ -76,6 +76,8 @@ import (
 	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
 
 	mychainmodulekeeper "mychain/x/mychain/keeper"
+	tokenmodulekeeper "mychain/x/token/keeper"
+
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 
 	"mychain/docs"
@@ -142,6 +144,7 @@ type App struct {
 	ScopedKeepers             map[string]capabilitykeeper.ScopedKeeper
 
 	MychainKeeper mychainmodulekeeper.Keeper
+	TokenKeeper   tokenmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -246,6 +249,7 @@ func New(
 		&app.GroupKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.MychainKeeper,
+		&app.TokenKeeper,
 		// this line is used by starport scaffolding # stargate/app/keeperDefinition
 	); err != nil {
 		panic(err)

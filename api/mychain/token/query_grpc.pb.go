@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.3.0
 // - protoc             (unknown)
-// source: mychain/mychain/query.proto
+// source: mychain/token/query.proto
 
-package mychain
+package token
 
 import (
 	context "context"
@@ -20,7 +20,7 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	Query_Params_FullMethodName = "/mychain.mychain.Query/Params"
+	Query_Params_FullMethodName = "/mychain.token.Query/Params"
 )
 
 // QueryClient is the client API for Query service.
@@ -99,7 +99,7 @@ func _Query_Params_Handler(srv interface{}, ctx context.Context, dec func(interf
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Query_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "mychain.mychain.Query",
+	ServiceName: "mychain.token.Query",
 	HandlerType: (*QueryServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -108,5 +108,5 @@ var Query_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "mychain/mychain/query.proto",
+	Metadata: "mychain/token/query.proto",
 }
