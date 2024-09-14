@@ -28,6 +28,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateParams",
 					Skip:      true, // skipped because authority gated
 				},
+				{
+					RpcMethod:      "CreateToken",
+					Use:            "create-token [name] [symbol] [total-supply]",
+					Short:          "Send a create-token tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "name"}, {ProtoField: "symbol"}, {ProtoField: "totalSupply"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},
