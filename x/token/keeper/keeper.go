@@ -7,9 +7,11 @@ import (
 	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	// tokentypes "mychain/x/token/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+    errorsmod "cosmossdk.io/errors"
 
 	"mychain/x/token/types"
-	tokentypes "mychain/x/token/types"
 )
 
 type (
@@ -17,60 +19,83 @@ type (
 		cdc          codec.BinaryCodec
 		storeService store.KVStoreService
 		logger       log.Logger
-
 		// the address capable of executing a MsgUpdateParams message. Typically, this
 		// should be the x/gov module account.
 		authority string
 	}
 )
+
 // SetToken stores a token in the KVStore.
-func (k Keeper) SetToken(ctx sdk.Context, token tokentypes.Token) {
-    store := ctx.KVStore(k.storeKey)
-    b := k.cdc.MustMarshal(&token)
+func (k Keeper) SetToken(ctx sdk.Context, token types.Token) {
+    store := k.storeService.OpenKVStore(ctx)	
+    b := k.cdc.MustMarshal(&token)    // Marshal token as protobuf
     store.Set([]byte(token.Symbol), b)
 }
 
 // GetToken retrieves a token from the store by its symbol.
-func (k Keeper) GetToken(ctx sdk.Context, symbol string) (tokentypes.Token, bool) {
-    store := ctx.KVStore(k.storeKey)
-    b := store.Get([]byte(symbol))
-    if b == nil {
-        return tokentypes.Token{}, false
+func (k Keeper) GetToken(ctx sdk.Context, symbol string) (types.Token, bool) {
+    // Open the KVStore using the storeService
+    store := k.storeService.OpenKVStore(ctx)
+
+    // Get the token from the store, store.Get now returns two values (value and error)
+    b, err := store.Get([]byte(symbol))
+    if err != nil || b == nil {
+        return types.Token{}, false
     }
-    var token tokentypes.Token
+
+    // Unmarshal the token from protobuf format
+    var token types.Token
     k.cdc.MustUnmarshal(b, &token)
+    
     return token, true
 }
 
 // SetTokenBalance sets the balance for a specific account and token.
 func (k Keeper) SetTokenBalance(ctx sdk.Context, symbol string, account string, amount uint64) {
-    store := ctx.KVStore(k.storeKey)
+    store := k.storeService.OpenKVStore(ctx) // Use storeService
     balanceKey := []byte(symbol + ":" + account)
-    b := k.cdc.MustMarshal(&tokentypes.TokenBalance{Amount: amount})
+    b := k.cdc.MustMarshal(&types.TokenBalance{Amount: amount}) // Marshal TokenBalance as protobuf
     store.Set(balanceKey, b)
 }
 
+// GetTokenBalance retrieves the balance of a specific account for a token.
 func (k Keeper) GetTokenBalance(ctx sdk.Context, symbol string, account string) uint64 {
-    store := ctx.KVStore(k.storeKey)
+    // Open the KVStore using the storeService
+    store := k.storeService.OpenKVStore(ctx)
+
+    // Create a unique key for the balance (combination of symbol and account)
     balanceKey := []byte(symbol + ":" + account)
-    b := store.Get(balanceKey)
-    if b == nil {
+
+    // Get the balance from the store, store.Get now returns two values (value and error)
+    b, err := store.Get(balanceKey)
+    if err != nil || b == nil {
         return 0
     }
-    var balance tokentypes.TokenBalance
+
+    // Unmarshal the balance from protobuf format
+    var balance types.TokenBalance
     k.cdc.MustUnmarshal(b, &balance)
+
     return balance.Amount
 }
 
+
+// SubtractTokenBalance subtracts tokens from the specified account's balance.
+func (k Keeper) SubtractTokenBalance(ctx sdk.Context, symbol string, account string, amount uint64) error {
+    balance := k.GetTokenBalance(ctx, symbol, account)
+    if balance < amount {
+        return errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, "insufficient balance to subtract")
+    }
+
+    newBalance := balance - amount
+    k.SetTokenBalance(ctx, symbol, account, newBalance)
+    return nil
+}
+
+// AddTokenBalance adds tokens to the specified account's balance.
 func (k Keeper) AddTokenBalance(ctx sdk.Context, symbol string, account string, amount uint64) {
     balance := k.GetTokenBalance(ctx, symbol, account)
     newBalance := balance + amount
-    k.SetTokenBalance(ctx, symbol, account, newBalance)
-}
-
-func (k Keeper) SubtractTokenBalance(ctx sdk.Context, symbol string, account string, amount uint64) {
-    balance := k.GetTokenBalance(ctx, symbol, account)
-    newBalance := balance - amount
     k.SetTokenBalance(ctx, symbol, account, newBalance)
 }
 

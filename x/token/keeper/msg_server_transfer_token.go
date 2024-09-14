@@ -2,7 +2,7 @@ package keeper
 
 import (
 	"context"
-	"strconv"
+	"strconv" // For string to uint64 conversion
 
 	"mychain/x/token/types"
 
@@ -34,7 +34,7 @@ func (k msgServer) TransferToken(goCtx context.Context, msg *types.MsgTransferTo
     // Check if sender has enough tokens
     senderBalance := k.GetTokenBalance(ctx, msg.TokenSymbol, sender)
     if senderBalance < amount {
-        return nil, errorsmod .Wrap(sdkerrors.ErrInsufficientFunds, "insufficient token balance")
+        return nil, errorsmod.Wrap(sdkerrors.ErrInsufficientFunds, "insufficient token balance")
     }
 
     // Update balances: Subtract from sender and add to receiver

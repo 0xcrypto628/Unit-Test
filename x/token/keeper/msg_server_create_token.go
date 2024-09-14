@@ -31,8 +31,8 @@ func (k msgServer) CreateToken(goCtx context.Context, msg *tokentypes.MsgCreateT
     token := tokentypes.Token{
         Name:        msg.Name,
         Symbol:      msg.Symbol,
-        TotalSupply: msg.TotalSupply,
-        Creator:     msg.Creator,
+        Supply: 	 totalSupply,
+        Owner:       msg.Creator,
     }
 
     // Store the token
