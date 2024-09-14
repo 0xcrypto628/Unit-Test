@@ -27,6 +27,10 @@ const (
 	// TODO: Determine the simulation weight value
 	defaultWeightMsgCreateToken int = 100
 
+	opWeightMsgTransferToken = "op_weight_msg_transfer_token"
+	// TODO: Determine the simulation weight value
+	defaultWeightMsgTransferToken int = 100
+
 	// this line is used by starport scaffolding # simapp/module/const
 )
 
@@ -61,6 +65,17 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 		tokensimulation.SimulateMsgCreateToken(am.accountKeeper, am.bankKeeper, am.keeper),
 	))
 
+	var weightMsgTransferToken int
+	simState.AppParams.GetOrGenerate(opWeightMsgTransferToken, &weightMsgTransferToken, nil,
+		func(_ *rand.Rand) {
+			weightMsgTransferToken = defaultWeightMsgTransferToken
+		},
+	)
+	operations = append(operations, simulation.NewWeightedOperation(
+		weightMsgTransferToken,
+		tokensimulation.SimulateMsgTransferToken(am.accountKeeper, am.bankKeeper, am.keeper),
+	))
+
 	// this line is used by starport scaffolding # simapp/module/operation
 
 	return operations
@@ -74,6 +89,14 @@ func (am AppModule) ProposalMsgs(simState module.SimulationState) []simtypes.Wei
 			defaultWeightMsgCreateToken,
 			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
 				tokensimulation.SimulateMsgCreateToken(am.accountKeeper, am.bankKeeper, am.keeper)
+				return nil
+			},
+		),
+		simulation.NewWeightedProposalMsg(
+			opWeightMsgTransferToken,
+			defaultWeightMsgTransferToken,
+			func(r *rand.Rand, ctx sdk.Context, accs []simtypes.Account) sdk.Msg {
+				tokensimulation.SimulateMsgTransferToken(am.accountKeeper, am.bankKeeper, am.keeper)
 				return nil
 			},
 		),

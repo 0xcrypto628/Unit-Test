@@ -34,6 +34,12 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					Short:          "Send a create-token tx",
 					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "name"}, {ProtoField: "symbol"}, {ProtoField: "totalSupply"}},
 				},
+				{
+					RpcMethod:      "TransferToken",
+					Use:            "transfer-token [token-symbol] [amount] [to-address]",
+					Short:          "Send a transfer-token tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "tokenSymbol"}, {ProtoField: "amount"}, {ProtoField: "toAddress"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},
