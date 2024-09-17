@@ -1,0 +1,44 @@
+# docker-compose.yml
+version: '3'
+services:
+  node0:
+    container_name: node0
+    image: mychain:latest
+    build:
+      context: .
+    ports:
+      - "26657:26657" # RPC
+      - "26656:26656" # P2P
+    volumes:
+      - ./node0:/root/.mychain
+    environment:
+      - MYCHAIN_NODE_ID=node0
+    command: ["mychaind", "start", "--home", "/root/.mychain"]
+
+  node1:
+    container_name: node1
+    image: mychain:latest
+    build:
+      context: .
+    ports:
+      - "26660:26657"
+      - "26659:26656"
+    volumes:
+      - ./node1:/root/.mychain
+    environment:
+      - MYCHAIN_NODE_ID=node1
+    command: ["mychaind", "start", "--home", "/root/.mychain", "--p2p.persistent_peers", "node0@node0:26656"]
+
+  node2:
+    container_name: node2
+    image: mychain:latest
+    build:
+      context: .
+    ports:
+      - "26662:26657"
+      - "26661:26656"
+    volumes:
+      - ./node2:/root/.mychain
+    environment:
+      - MYCHAIN_NODE_ID=node2
+    command: ["mychaind", "start", "--home", "/root/.mychain", "--p2p.persistent_peers", "node0@node0:26656"]

@@ -4,14 +4,15 @@ import (
     "testing"
 
     sdk "github.com/cosmos/cosmos-sdk/types"
-    storetypes "cosmossdk.io/store/types"    // Correct import for store types
-    storedb "cosmossdk.io/store"              // Correct store import for CommitMultiStore
+    storetypes "cosmossdk.io/store/types"  // Correct import for store types
+    "cosmossdk.io/store"
     "github.com/cosmos/cosmos-sdk/codec"
-    dbm "github.com/cosmos/cosmos-db"         // Correct import for database (cosmos-db)
+    dbm "github.com/cosmos/cosmos-db"  // Updated to cosmos-db
     "github.com/stretchr/testify/require"
     tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-    log "cosmossdk.io/log"                    // Correct import for logger
-    "cosmossdk.io/store/metrics"              // Required for StoreMetrics
+    log "cosmossdk.io/log"
+    "cosmossdk.io/store/metrics"  // Required for StoreMetrics
+    // "cosmossdk.io/core/store"  // Import the correct package for KVStoreService
 
     "mychain/x/token/keeper"
     "mychain/x/token/types"
@@ -19,10 +20,10 @@ import (
 
 // setupKeeper initializes the keeper and context for testing.
 func setupKeeper(t *testing.T) (keeper.Keeper, sdk.Context) {
-    // Initialize an in-memory database using cosmos-db
+    // Initialize an in-memory database using cosmos-db (cosmos-sdk's new database dependency)
     db := dbm.NewMemDB()
 
-    // Create store keys for persistent and memory stores
+    // Create store keys
     storeKey := storetypes.NewKVStoreKey(types.StoreKey)
     memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
@@ -32,29 +33,26 @@ func setupKeeper(t *testing.T) (keeper.Keeper, sdk.Context) {
     // Set up store metrics (use no-op metrics)
     storeMetrics := metrics.NewNoOpMetrics()
 
-    // Set up the CommitMultiStore with logger and store metrics
-    ms := storedb.NewCommitMultiStore(db, logger, storeMetrics)
-    
-    // Mount the stores to the multi-store (persistent and memory stores)
+    // Set up the multi-store (now with the logger and store metrics)
+    ms := store.NewCommitMultiStore(db, logger, storeMetrics)
     ms.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
     ms.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
-    
-    // Ensure the multi-store is loaded correctly
     require.NoError(t, ms.LoadLatestVersion())
 
-    // Create context with block header (Tmproto is used for Tendermint headers)
+    // Create the KVStoreService from the store key using cosmossdk.io/core/store
+    storeService := store.NewKVStoreService(storeKey)  // Use core/store for KVStoreService
+
+    // Create context with block header
     ctx := sdk.NewContext(ms, tmproto.Header{}, false, logger)
 
-    // Create codec for encoding/decoding data
+    // Create codec
     cdc := codec.NewProtoCodec(nil)
 
-    // Initialize the keeper with codec, storeKey, logger, and authority address
-    k := keeper.NewKeeper(cdc, storeKey, logger, "authority_address")
+    // Initialize keeper with codec, KVStoreService (not KVStoreKey), logger, and authority
+    k := keeper.NewKeeper(cdc, storeService, logger, "authority_address")
 
-    // Return both the keeper and context for use in tests
-    return k, ctx
+    return k, ctx  // Return keeper by value
 }
-
 
 
 
