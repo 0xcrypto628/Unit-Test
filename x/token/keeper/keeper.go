@@ -19,8 +19,6 @@ type (
 		cdc          codec.BinaryCodec
 		storeService store.KVStoreService
 		logger       log.Logger
-		// the address capable of executing a MsgUpdateParams message. Typically, this
-		// should be the x/gov module account.
 		authority string
 	}
 )
