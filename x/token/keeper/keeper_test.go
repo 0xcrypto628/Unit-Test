@@ -1,65 +1,59 @@
 package keeper_test
 
 import (
-	"testing"
+    "testing"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	storetypes "cosmossdk.io/store/types"       // Import for store types
-	storedb "cosmossdk.io/core/store"            // Correct store import for KVStoreService
-	"github.com/cosmos/cosmos-sdk/codec"
-	dbm "github.com/cosmos/cosmos-db"      
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	log "cosmossdk.io/log"                       // Logger
-	"cosmossdk.io/store/metrics"                 // Store metrics for testing
+    sdk "github.com/cosmos/cosmos-sdk/types"
+    storetypes "cosmossdk.io/store/types"    // Correct import for store types
+    storedb "cosmossdk.io/store"              // Correct store import for CommitMultiStore
+    "github.com/cosmos/cosmos-sdk/codec"
+    dbm "github.com/cosmos/cosmos-db"         // Correct import for database (cosmos-db)
+    "github.com/stretchr/testify/require"
+    tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+    log "cosmossdk.io/log"                    // Correct import for logger
+    "cosmossdk.io/store/metrics"              // Required for StoreMetrics
 
-	"mychain/x/token/keeper"
-	"mychain/x/token/types"
+    "mychain/x/token/keeper"
+    "mychain/x/token/types"
 )
 
 // setupKeeper initializes the keeper and context for testing.
 func setupKeeper(t *testing.T) (keeper.Keeper, sdk.Context) {
-	// Initialize an in-memory database using cosmos-db
-	db := dbm.NewMemDB()
+    // Initialize an in-memory database using cosmos-db
+    db := dbm.NewMemDB()
 
-	// Create store keys for persistent and memory stores
-	storeKey := storetypes.NewKVStoreKey(types.StoreKey)
-	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
+    // Create store keys for persistent and memory stores
+    storeKey := storetypes.NewKVStoreKey(types.StoreKey)
+    memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 
-	// Set up a logger
-	logger := log.NewNopLogger()
+    // Set up a logger
+    logger := log.NewNopLogger()
 
-	// Set up store metrics (use no-op metrics)
-	storeMetrics := metrics.NewNoOpMetrics()
+    // Set up store metrics (use no-op metrics)
+    storeMetrics := metrics.NewNoOpMetrics()
 
-	// Set up the CommitMultiStore with logger and store metrics
-	ms := storedb.NewCommitMultiStore(db, logger, storeMetrics)
-	
-	// Mount the stores to the multi-store (persistent and memory stores)
-	ms.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
-	ms.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
-	
-	// Ensure the multi-store is loaded correctly
-	require.NoError(t, ms.LoadLatestVersion())
+    // Set up the CommitMultiStore with logger and store metrics
+    ms := storedb.NewCommitMultiStore(db, logger, storeMetrics)
+    
+    // Mount the stores to the multi-store (persistent and memory stores)
+    ms.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
+    ms.MountStoreWithDB(memStoreKey, storetypes.StoreTypeMemory, nil)
+    
+    // Ensure the multi-store is loaded correctly
+    require.NoError(t, ms.LoadLatestVersion())
 
-	// Create KVStoreService using the CommitMultiStore
-	// You should replace storeKey usage with creating a store service using NewKVStoreService
-	// This ensures the store service is compatible with the KVStoreService interface
-	storeService := storedb.NewCommitKVStoreService(storeKey, ms)
+    // Create context with block header (Tmproto is used for Tendermint headers)
+    ctx := sdk.NewContext(ms, tmproto.Header{}, false, logger)
 
-	// Create context with block header (Tmproto is used for Tendermint headers)
-	ctx := sdk.NewContext(ms, tmproto.Header{}, false, logger)
+    // Create codec for encoding/decoding data
+    cdc := codec.NewProtoCodec(nil)
 
-	// Create codec for encoding/decoding data
-	cdc := codec.NewProtoCodec(nil)
+    // Initialize the keeper with codec, storeKey, logger, and authority address
+    k := keeper.NewKeeper(cdc, storeKey, logger, "authority_address")
 
-	// Initialize the keeper with codec, KVStoreService, logger, and authority address
-	k := keeper.NewKeeper(cdc, storeService, logger, "authority_address")
-
-	// Return both the keeper and context for use in tests
-	return k, ctx
+    // Return both the keeper and context for use in tests
+    return k, ctx
 }
-
 
 
 

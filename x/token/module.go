@@ -15,9 +15,7 @@ func (AppModuleBasic) Name() string {
     return types.ModuleName
 }
 
-func (AppModuleBasic) RegisterCodec(cdc *codec.LegacyAmino) {
-    types.RegisterCodec(cdc)
-}
+
 
 func (AppModuleBasic) DefaultGenesis(cdc codec.JSONCodec) json.RawMessage {
     return cdc.MustMarshalJSON(types.DefaultGenesis())
